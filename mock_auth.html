@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>模拟ERP授权 - 测试环境</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin: 15px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            background: #1890ff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .code-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            margin: 10px 0;
+            border: 1px solid #e9ecef;
+        }
+        .warning {
+            background: #fffbe6;
+            border: 1px solid #ffe58f;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 模拟ERP授权页面</h1>
+        
+        <div class="warning">
+            <strong>注意：</strong>这是模拟授权页面，用于测试OAuth回调流程。
+            在实际环境中，您需要访问真实的NGP授权页面。
+        </div>
+
+        <div class="form-group">
+            <label>模拟用户登录：</label>
+            <select id="mockUser">
+                <option value="user1">测试用户A (user_a@test.com)</option>
+                <option value="user2">测试用户B (user_b@test.com)</option>
+                <option value="user3">测试用户C (user_c@test.com)</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>授权范围：</label>
+            <div>
+                <label><input type="checkbox" name="scope" value="read" checked> 读取权限</label>
+                <label><input type="checkbox" name="scope" value="write"> 写入权限</label>
+                <label><input type="checkbox" name="scope" value="api" checked> API访问</label>
+            </div>
+        </div>
+
+        <button onclick="simulateAuthorization()">模拟授权</button>
+        <button onclick="simulateDenial()">模拟拒绝</button>
+
+        <div id="urlInfo" style="margin-top: 20px; display: none;">
+            <h3>URL参数信息：</h3>
+            <div class="code-box" id="paramsDisplay"></div>
+        </div>
+    </div>
+
+    <script>
+        // 解析URL参数
+        function parseUrlParams() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const params = {};
+            
+            for (let [key, value] of urlParams) {
+                params[key] = value;
+            }
+            
+            if (Object.keys(params).length > 0) {
+                document.getElementById('urlInfo').style.display = 'block';
+                document.getElementById('paramsDisplay').textContent = JSON.stringify(params, null, 2);
+            }
+            
+            return params;
+        }
+
+        // 模拟授权成功
+        function simulateAuthorization() {
+            const urlParams = parseUrlParams();
+            const redirectUri = urlParams.redirect_uri;
+            const state = urlParams.state || '';
+            
+            if (!redirectUri) {
+                alert('错误：未找到回调地址 (redirect_uri)');
+                return;
+            }
+
+            // 生成模拟的授权码
+            const mockCode = 'mock_auth_code_' + Math.random().toString(36).substring(2, 15);
+            
+            // 构建回调URL
+            const callbackUrl = new URL(redirectUri);
+            callbackUrl.searchParams.set('code', mockCode);
+            if (state) {
+                callbackUrl.searchParams.set('state', state);
+            }
+            
+            alert(`即将跳转到回调地址并传递授权码：${mockCode}`);
+            window.location.href = callbackUrl.toString();
+        }
+
+        // 模拟授权拒绝
+        function simulateDenial() {
+            const urlParams = parseUrlParams();
+            const redirectUri = urlParams.redirect_uri;
+            const state = urlParams.state || '';
+            
+            if (!redirectUri) {
+                alert('错误：未找到回调地址 (redirect_uri)');
+                return;
+            }
+
+            // 构建错误回调URL
+            const callbackUrl = new URL(redirectUri);
+            callbackUrl.searchParams.set('error', 'access_denied');
+            callbackUrl.searchParams.set('error_description', 'User denied authorization');
+            if (state) {
+                callbackUrl.searchParams.set('state', state);
+            }
+            
+            alert('模拟用户拒绝授权');
+            window.location.href = callbackUrl.toString();
+        }
+
+        // 页面加载时显示参数
+        window.addEventListener('DOMContentLoaded', function() {
+            parseUrlParams();
+        });
+    </script>
+</body>
+</html>
