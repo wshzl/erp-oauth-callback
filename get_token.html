@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>获取Access Token - 测试</title>
+    <style>
+        body { font-family: Arial; max-width: 600px; margin: 50px auto; padding: 20px; }
+        .box { background: #f5f5f5; padding: 20px; margin: 10px 0; border-radius: 5px; }
+        input, button { padding: 10px; margin: 5px; width: 100%; }
+    </style>
+</head>
+<body>
+    <h1>获取Access Token</h1>
+    
+    <div class="box">
+        <h3>步骤1：获取授权码</h3>
+        <p>从回调页面复制授权码：</p>
+        <input type="text" id="authCode" placeholder="粘贴授权码">
+    </div>
+    
+    <div class="box">
+        <h3>步骤2：配置应用信息</h3>
+        <input type="text" id="appKey" placeholder="App Key">
+        <input type="text" id="appSecret" placeholder="App Secret">
+        <input type="text" id="redirectUri" placeholder="回调地址" value="https://wshzl.github.io/erp-oauth-callback/callback.html">
+    </div>
+    
+    <div class="box">
+        <h3>步骤3：获取Token</h3>
+        <button onclick="getToken()">获取Access Token</button>
+        <div id="tokenResult"></div>
+    </div>
+
+    <script>
+        async function getToken() {
+            const code = document.getElementById('authCode').value;
+            const appKey = document.getElementById('appKey').value;
+            const appSecret = document.getElementById('appSecret').value;
+            const redirectUri = document.getElementById('redirectUri').value;
+            
+            // 这里模拟Token获取，实际需要调用真实API
+            document.getElementById('tokenResult').innerHTML = `
+                <div style="background: #d4edda; padding: 15px; margin: 10px 0;">
+                    <h4>✅ 模拟Token获取成功</h4>
+                    <p>在实际环境中，这里会调用：</p>
+                    <p><strong>POST https://ngpopen.wsgjp.com/oauth/token</strong></p>
+                    <p>参数：grant_type=authorization_code&code=${code}&client_id=${appKey}&client_secret=${appSecret}&redirect_uri=${redirectUri}</p>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
