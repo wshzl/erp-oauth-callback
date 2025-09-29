@@ -41,6 +41,10 @@
             border-radius: 5px;
             cursor: pointer;
             margin: 5px;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #096dd9;
         }
         .code-box {
             background: #f8f9fa;
@@ -49,10 +53,18 @@
             font-family: monospace;
             margin: 10px 0;
             border: 1px solid #e9ecef;
+            word-break: break-all;
         }
         .warning {
             background: #fffbe6;
             border: 1px solid #ffe58f;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .success {
+            background: #f6ffed;
+            border: 1px solid #b7eb8f;
             padding: 15px;
             border-radius: 5px;
             margin: 15px 0;
@@ -66,6 +78,11 @@
         <div class="warning">
             <strong>注意：</strong>这是模拟授权页面，用于测试OAuth回调流程。
             在实际环境中，您需要访问真实的NGP授权页面。
+        </div>
+
+        <div id="urlInfo">
+            <h3>📋 接收到的URL参数：</h3>
+            <div class="code-box" id="paramsDisplay">正在解析参数...</div>
         </div>
 
         <div class="form-group">
@@ -86,12 +103,14 @@
             </div>
         </div>
 
-        <button onclick="simulateAuthorization()">模拟授权</button>
-        <button onclick="simulateDenial()">模拟拒绝</button>
+        <div style="text-align: center; margin: 20px 0;">
+            <button onclick="simulateAuthorization()">✅ 模拟授权成功</button>
+            <button onclick="simulateDenial()" style="background: #ff4d4f;">❌ 模拟拒绝授权</button>
+        </div>
 
-        <div id="urlInfo" style="margin-top: 20px; display: none;">
-            <h3>URL参数信息：</h3>
-            <div class="code-box" id="paramsDisplay"></div>
+        <div id="debugInfo" class="code-box" style="display: none;">
+            <h4>调试信息：</h4>
+            <div id="debugContent"></div>
         </div>
     </div>
 
@@ -101,23 +120,29 @@
             const urlParams = new URLSearchParams(window.location.search);
             const params = {};
             
+            console.log('开始解析URL参数...');
+            
             for (let [key, value] of urlParams) {
                 params[key] = value;
+                console.log(`参数: ${key} = ${value}`);
             }
             
-            if (Object.keys(params).length > 0) {
-                document.getElementById('urlInfo').style.display = 'block';
-                document.getElementById('paramsDisplay').textContent = JSON.stringify(params, null, 2);
-            }
+            // 显示参数
+            document.getElementById('paramsDisplay').textContent = JSON.stringify(params, null, 2);
             
             return params;
         }
 
         // 模拟授权成功
         function simulateAuthorization() {
+            console.log('开始模拟授权...');
+            
             const urlParams = parseUrlParams();
             const redirectUri = urlParams.redirect_uri;
             const state = urlParams.state || '';
+            
+            console.log('redirect_uri:', redirectUri);
+            console.log('state:', state);
             
             if (!redirectUri) {
                 alert('错误：未找到回调地址 (redirect_uri)');
@@ -126,20 +151,45 @@
 
             // 生成模拟的授权码
             const mockCode = 'mock_auth_code_' + Math.random().toString(36).substring(2, 15);
+            console.log('生成的授权码:', mockCode);
             
             // 构建回调URL
-            const callbackUrl = new URL(redirectUri);
-            callbackUrl.searchParams.set('code', mockCode);
-            if (state) {
-                callbackUrl.searchParams.set('state', state);
+            let callbackUrl;
+            try {
+                callbackUrl = new URL(redirectUri);
+                callbackUrl.searchParams.set('code', mockCode);
+                if (state) {
+                    callbackUrl.searchParams.set('state', state);
+                }
+                
+                console.log('构建的回调URL:', callbackUrl.toString());
+                
+                // 显示调试信息
+                document.getElementById('debugContent').innerHTML = `
+                    <strong>即将跳转到：</strong><br>
+                    ${callbackUrl.toString()}<br><br>
+                    <strong>传递的参数：</strong><br>
+                    code=${mockCode}<br>
+                    state=${state}
+                `;
+                document.getElementById('debugInfo').style.display = 'block';
+                
+                // 延迟跳转，让用户看到信息
+                setTimeout(() => {
+                    console.log('开始跳转到回调页面...');
+                    window.location.href = callbackUrl.toString();
+                }, 1000);
+                
+            } catch (error) {
+                console.error('URL构建错误:', error);
+                alert('URL构建错误: ' + error.message);
             }
-            
-            alert(`即将跳转到回调地址并传递授权码：${mockCode}`);
-            window.location.href = callbackUrl.toString();
         }
 
         // 模拟授权拒绝
         function simulateDenial() {
+            console.log('模拟授权拒绝...');
+            
             const urlParams = parseUrlParams();
             const redirectUri = urlParams.redirect_uri;
             const state = urlParams.state || '';
@@ -149,21 +199,41 @@
                 return;
             }
 
-            // 构建错误回调URL
-            const callbackUrl = new URL(redirectUri);
-            callbackUrl.searchParams.set('error', 'access_denied');
-            callbackUrl.searchParams.set('error_description', 'User denied authorization');
-            if (state) {
-                callbackUrl.searchParams.set('state', state);
+            try {
+                const callbackUrl = new URL(redirectUri);
+                callbackUrl.searchParams.set('error', 'access_denied');
+                callbackUrl.searchParams.set('error_description', 'User denied authorization');
+                if (state) {
+                    callbackUrl.searchParams.set('state', state);
+                }
+                
+                console.log('拒绝回调URL:', callbackUrl.toString());
+                
+                // 显示调试信息
+                document.getElementById('debugContent').innerHTML = `
+                    <strong>即将跳转到：</strong><br>
+                    ${callbackUrl.toString()}<br><br>
+                    <strong>错误信息：</strong><br>
+                    access_denied - User denied authorization
+                `;
+                document.getElementById('debugInfo').style.display = 'block';
+                
+                setTimeout(() => {
+                    window.location.href = callbackUrl.toString();
+                }, 1000);
+                
+            } catch (error) {
+                alert('URL构建错误: ' + error.message);
             }
-            
-            alert('模拟用户拒绝授权');
-            window.location.href = callbackUrl.toString();
         }
 
         // 页面加载时显示参数
         window.addEventListener('DOMContentLoaded', function() {
+            console.log('页面加载完成');
             parseUrlParams();
+            
+            // 打开浏览器控制台提示
+            console.log('💡 打开浏览器控制台(F12)可以看到详细调试信息');
         });
     </script>
 </body>
