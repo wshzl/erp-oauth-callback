@@ -1,251 +1,29 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ERP系统授权</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 50px auto;
-            padding: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-        }
-        .container {
-            background: white;
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
-        .form-group {
-            margin: 20px 0;
-        }
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-            color: #333;
-        }
-        input, select {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e1e5e9;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.3s;
-        }
-        input:focus, select:focus {
-            border-color: #1890ff;
-            outline: none;
-        }
-        button {
-            background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 8px;
-            font-size: 16px;
-            cursor: pointer;
-            margin: 10px;
-            transition: transform 0.2s;
-        }
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(24, 144, 255, 0.4);
-        }
-        .info-box {
-            background: #e6f7ff;
-            padding: 20px;
-            border-radius: 8px;
-            margin: 20px 0;
-            border-left: 4px solid #1890ff;
-        }
-        .code-box {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 5px;
-            font-family: 'Courier New', monospace;
-            margin: 10px 0;
-            border: 1px solid #e9ecef;
-        }
-        .step {
-            background: white;
-            border: 2px solid #f0f0f0;
-            border-radius: 10px;
-            padding: 20px;
-            margin: 15px 0;
-        }
-        .step-number {
-            background: #1890ff;
-            color: white;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 10px;
-            font-weight: bold;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>🚀 ERP系统OAuth授权</h1>
-        
-        <div class="info-box">
-            <h3>✅ 回调地址已就绪</h3>
-            <p>您的GitHub Pages回调地址：</p>
-            <div class="code-box">https://wshzl.github.io/erp-oauth-callback/callback.html</div>
-            <p>这个地址将在授权链接中作为参数传递</p>
-        </div>
+<!-- 在原有代码的按钮区域添加 -->
+<div style="text-align: center; margin: 30px 0;">
+    <button type="button" onclick="startAuthorization()">开始真实授权</button>
+    <button type="button" onclick="startMockAuthorization()" style="background: #ff4d4f;">使用模拟授权（测试）</button>
+    <button type="button" onclick="testCallback()">测试回调页面</button>
+</div>
 
-        <form id="authForm">
-            <div class="form-group">
-                <label for="appKey">App Key：</label>
-                <input type="text" id="appKey" placeholder="请输入您的App Key" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="appSecret">App Secret：</label>
-                <input type="password" id="appSecret" placeholder="请输入您的App Secret" required>
-            </div>
+<script>
+// 添加模拟授权函数
+function startMockAuthorization() {
+    const appKey = document.getElementById('appKey').value;
+    const redirectUri = document.getElementById('redirectUri').value;
+    
+    if (!appKey) {
+        alert('请输入App Key');
+        return;
+    }
 
-            <div class="form-group">
-                <label for="redirectUri">回调地址：</label>
-                <input type="text" id="redirectUri" 
-                       value="https://wshzl.github.io/erp-oauth-callback/callback.html" 
-                       readonly style="background: #f9f9f9;">
-            </div>
-
-            <div class="form-group">
-                <label for="authUrl">授权页面地址：</label>
-                <input type="text" id="authUrl" 
-                       value="https://ngpopen.wsgjp.com/oauth/authorize" 
-                       placeholder="NGP授权页面地址">
-            </div>
-
-            <div style="text-align: center; margin: 30px 0;">
-                <button type="button" onclick="startAuthorization()">开始授权</button>
-                <button type="button" onclick="generateAuthUrl()">生成授权链接</button>
-                <button type="button" onclick="testCallback()">测试回调页面</button>
-            </div>
-        </form>
-
-        <!-- 生成的授权链接显示 -->
-        <div id="authLinkBox" style="display: none;">
-            <div class="info-box" style="background: #f6ffed; border-left-color: #52c41a;">
-                <h3>🔗 授权链接已生成</h3>
-                <p>请复制此链接在浏览器中打开：</p>
-                <div class="code-box" id="generatedAuthUrl"></div>
-                <button onclick="openAuthLink()">直接打开授权页面</button>
-                <button onclick="copyAuthLink()">复制授权链接</button>
-            </div>
-        </div>
-
-        <!-- 使用说明 -->
-        <div class="step">
-            <h3><span class="step-number">1</span>获取应用凭证</h3>
-            <p>在NGP开放平台的"应用管理"中获取：</p>
-            <ul>
-                <li>App Key</li>
-                <li>App Secret</li>
-            </ul>
-        </div>
-
-        <div class="step">
-            <h3><span class="step-number">2</span>开始授权</h3>
-            <p>点击"开始授权"按钮，用户将被重定向到NGP平台进行登录授权</p>
-        </div>
-
-        <div class="step">
-            <h3><span class="step-number">3</span>获取授权码</h3>
-            <p>授权成功后，NGP平台将跳转到您的回调地址，并携带授权码(code)</p>
-        </div>
-
-        <div class="step">
-            <h3><span class="step-number">4</span>换取Token</h3>
-            <p>使用授权码调用Token接口获取Access Token</p>
-        </div>
-    </div>
-
-    <script>
-        function startAuthorization() {
-            const appKey = document.getElementById('appKey').value;
-            const redirectUri = document.getElementById('redirectUri').value;
-            const authUrl = document.getElementById('authUrl').value;
-            
-            if (!appKey) {
-                alert('请输入App Key');
-                return;
-            }
-
-            if (!authUrl) {
-                alert('请输入授权页面地址');
-                return;
-            }
-
-            // 生成随机state参数防止CSRF攻击
-            const state = 'state_' + Math.random().toString(36).substring(2, 15);
-            
-            // 构建授权URL
-            const authorizationUrl = `${authUrl}?response_type=code&client_id=${encodeURIComponent(appKey)}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=api&state=${state}`;
-            
-            // 保存state到本地存储，用于验证回调
-            localStorage.setItem('oauth_state', state);
-            localStorage.setItem('oauth_app_key', appKey);
-            
-            // 跳转到授权页面
-            window.location.href = authorizationUrl;
-        }
-
-        function generateAuthUrl() {
-            const appKey = document.getElementById('appKey').value;
-            const redirectUri = document.getElementById('redirectUri').value;
-            const authUrl = document.getElementById('authUrl').value;
-            
-            if (!appKey) {
-                alert('请输入App Key');
-                return;
-            }
-
-            const state = 'state_' + Math.random().toString(36).substring(2, 15);
-            const authorizationUrl = `${authUrl}?response_type=code&client_id=${encodeURIComponent(appKey)}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=api&state=${state}`;
-            
-            localStorage.setItem('oauth_state', state);
-            localStorage.setItem('oauth_app_key', appKey);
-            
-            // 显示生成的链接
-            document.getElementById('generatedAuthUrl').textContent = authorizationUrl;
-            document.getElementById('authLinkBox').style.display = 'block';
-        }
-
-        function openAuthLink() {
-            const url = document.getElementById('generatedAuthUrl').textContent;
-            window.open(url, '_blank');
-        }
-
-        function copyAuthLink() {
-            const url = document.getElementById('generatedAuthUrl').textContent;
-            navigator.clipboard.writeText(url).then(() => {
-                alert('授权链接已复制到剪贴板！');
-            });
-        }
-
-        function testCallback() {
-            // 测试回调页面
-            window.open('https://wshzl.github.io/erp-oauth-callback/callback.html?code=test_12345&state=test_state', '_blank');
-        }
-
-        // 页面加载时检查是否有保存的配置
-        window.addEventListener('DOMContentLoaded', function() {
-            const savedAppKey = localStorage.getItem('oauth_app_key');
-            if (savedAppKey) {
-                document.getElementById('appKey').value = savedAppKey;
-            }
-        });
-    </script>
-</body>
-</html>
+    const state = 'state_' + Math.random().toString(36).substring(2, 15);
+    
+    // 使用模拟授权页面
+    const mockAuthUrl = `https://wshzl.github.io/erp-oauth-callback/mock_auth.html?response_type=code&client_id=${encodeURIComponent(appKey)}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=api&state=${state}`;
+    
+    localStorage.setItem('oauth_state', state);
+    localStorage.setItem('oauth_app_key', appKey);
+    
+    window.location.href = mockAuthUrl;
+}
+</script>
